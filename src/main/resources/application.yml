@@ -1,0 +1,144 @@
+spring:
+  application:
+    name: OrderService
+
+  # MySQL Database Configuration
+  datasource:
+    url: jdbc:mysql://localhost:3306/project2_m2
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+    defer-datasource-initialization: true
+
+  # SQL Initialization
+  sql:
+    init:
+      mode: always
+      encoding: UTF-8
+      data-locations: classpath:db/insert_additional_seed_data.sql
+
+# Server Configuration
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+# Product API Configuration
+product:
+  api:
+    url: http://localhost:8081/api/products
+
+# Payment Service Configuration
+payment:
+  api:
+    url: http://localhost:8082/api/payments
+  # Set to true to enable external payment service, false to use local payment processing
+  service:
+    enabled: false
+
+# Application specific properties
+app:
+  db:
+    seed: true
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.order: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# ==================== RESILIENCE4J CONFIGURATION ====================
+resilience4j:
+  # Circuit Breaker Configuration
+  circuitbreaker:
+    instances:
+      # Circuit Breaker - Product Service
+      productServiceCircuitBreaker:
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 2s
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 30s
+        register-health-indicator: true
+
+      # Circuit Breaker - Payment Service
+      paymentServiceCircuitBreaker:
+        failure-rate-threshold: 70
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 3s
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 15s
+        register-health-indicator: true
+
+  # Retry Configuration
+  retry:
+    instances:
+      # Retry - Product Service
+      productServiceRetry:
+        max-attempts: 3
+        wait-duration: 500ms
+        retry-exceptions:
+          - java.util.concurrent.TimeoutException
+          - java.net.ConnectException
+          - java.net.SocketTimeoutException
+          - org.springframework.web.client.ResourceAccessException
+          - org.springframework.web.client.HttpServerErrorException
+        ignore-exceptions:
+          - java.io.FileNotFoundException
+
+      # Retry - Payment Service
+      paymentServiceRetry:
+        max-attempts: 2
+        wait-duration: 1000ms
+        retry-exceptions:
+          - java.util.concurrent.TimeoutException
+          - java.net.ConnectException
+          - java.net.SocketTimeoutException
+          - org.springframework.web.client.ResourceAccessException
+          - org.springframework.web.client.HttpServerErrorException
+        ignore-exceptions:
+          - org.springframework.web.client.HttpClientErrorException.BadRequest
+
+  # Time Limiter Configuration
+  timelimiter:
+    instances:
+      # Time Limiter - Product Service
+      productServiceTimeLimiter:
+        timeout-duration: 5s
+        cancel-running-future: true
+
+      # Time Limiter - Payment Service
+      paymentServiceTimeLimiter:
+        timeout-duration: 10s
+        cancel-running-future: true
+
+# Management Endpoints Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,circuitbreakers,retries
+  health:
+    circuitbreakers:
+      enabled: true
+    ratelimiters:
+      enabled: true
+

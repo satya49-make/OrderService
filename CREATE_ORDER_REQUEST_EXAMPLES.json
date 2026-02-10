@@ -1,0 +1,238 @@
+{
+  "examples": [
+    {
+      "description": "Valid Order Request - CREDIT_CARD Payment",
+      "request": {
+        "productId": 1,
+        "quantity": 5,
+        "customerName": "John Doe",
+        "customerEmail": "john.doe@example.com",
+        "shippingAddress": "123 Main Street, Springfield, IL 62701",
+        "paymentMethod": "CREDIT_CARD"
+      }
+    },
+    {
+      "description": "Valid Order Request - DEBIT_CARD Payment",
+      "request": {
+        "productId": 2,
+        "quantity": 10,
+        "customerName": "Jane Smith",
+        "customerEmail": "jane.smith@example.com",
+        "shippingAddress": "456 Oak Avenue, Chicago, IL 60601",
+        "paymentMethod": "DEBIT_CARD"
+      }
+    },
+    {
+      "description": "Valid Order Request - UPI Payment",
+      "request": {
+        "productId": 3,
+        "quantity": 2,
+        "customerName": "Rajesh Kumar",
+        "customerEmail": "rajesh.kumar@example.com",
+        "shippingAddress": "789 Market Road, Bangalore, KA 560001",
+        "paymentMethod": "UPI"
+      }
+    },
+    {
+      "description": "Valid Order Request - WALLET Payment",
+      "request": {
+        "productId": 5,
+        "quantity": 1,
+        "customerName": "Maria Garcia",
+        "customerEmail": "maria.garcia@example.com",
+        "shippingAddress": "321 Pine Lane, Austin, TX 78701",
+        "paymentMethod": "WALLET"
+      }
+    },
+    {
+      "description": "Bulk Order Request",
+      "request": {
+        "productId": 10,
+        "quantity": 100,
+        "customerName": "ABC Corporation",
+        "customerEmail": "orders@abccorp.com",
+        "shippingAddress": "999 Industrial Park, Houston, TX 77001",
+        "paymentMethod": "CREDIT_CARD"
+      }
+    },
+    {
+      "description": "Small Order Request",
+      "request": {
+        "productId": 7,
+        "quantity": 1,
+        "customerName": "Sarah Johnson",
+        "customerEmail": "sarah.johnson@example.com",
+        "shippingAddress": "555 Elm Street, Seattle, WA 98101",
+        "paymentMethod": "DEBIT_CARD"
+      }
+    }
+  ],
+  "cURL_Examples": [
+    {
+      "description": "Create Order with CREDIT_CARD - cURL",
+      "command": "curl -X POST http://localhost:8080/api/orders/create -H 'Content-Type: application/json' -d '{\"productId\": 1, \"quantity\": 5, \"customerName\": \"John Doe\", \"customerEmail\": \"john.doe@example.com\", \"shippingAddress\": \"123 Main Street, Springfield, IL 62701\", \"paymentMethod\": \"CREDIT_CARD\"}'"
+    },
+    {
+      "description": "Create Order with UPI - cURL",
+      "command": "curl -X POST http://localhost:8080/api/orders/create -H 'Content-Type: application/json' -d '{\"productId\": 3, \"quantity\": 2, \"customerName\": \"Rajesh Kumar\", \"customerEmail\": \"rajesh.kumar@example.com\", \"shippingAddress\": \"789 Market Road, Bangalore, KA 560001\", \"paymentMethod\": \"UPI\"}'"
+    }
+  ],
+  "validation_rules": {
+    "productId": {
+      "type": "Long",
+      "required": true,
+      "description": "Must be a valid product ID that exists in the Product Service",
+      "example": 1,
+      "constraints": "Must be > 0"
+    },
+    "quantity": {
+      "type": "Integer",
+      "required": true,
+      "description": "Number of units to order",
+      "example": 5,
+      "constraints": "Must be > 0, should not exceed available quantity"
+    },
+    "customerName": {
+      "type": "String",
+      "required": true,
+      "description": "Full name of the customer",
+      "example": "John Doe",
+      "constraints": "Non-empty, max 255 characters"
+    },
+    "customerEmail": {
+      "type": "String",
+      "required": true,
+      "description": "Email address of the customer",
+      "example": "john.doe@example.com",
+      "constraints": "Valid email format"
+    },
+    "shippingAddress": {
+      "type": "String",
+      "required": true,
+      "description": "Full shipping address",
+      "example": "123 Main Street, Springfield, IL 62701",
+      "constraints": "Non-empty, max 500 characters"
+    },
+    "paymentMethod": {
+      "type": "String",
+      "required": true,
+      "description": "Payment method for the order",
+      "example": "CREDIT_CARD",
+      "allowed_values": ["CREDIT_CARD", "DEBIT_CARD", "UPI", "WALLET", "NET_BANKING"],
+      "constraints": "Must be one of the allowed payment methods"
+    }
+  },
+  "error_scenarios": [
+    {
+      "scenario": "Product Not Found",
+      "request": {
+        "productId": 99999,
+        "quantity": 5,
+        "customerName": "John Doe",
+        "customerEmail": "john.doe@example.com",
+        "shippingAddress": "123 Main Street, Springfield, IL 62701",
+        "paymentMethod": "CREDIT_CARD"
+      },
+      "expected_error": "Product not found or not available",
+      "http_status": 404
+    },
+    {
+      "scenario": "Insufficient Product Quantity",
+      "request": {
+        "productId": 1,
+        "quantity": 10000,
+        "customerName": "John Doe",
+        "customerEmail": "john.doe@example.com",
+        "shippingAddress": "123 Main Street, Springfield, IL 62701",
+        "paymentMethod": "CREDIT_CARD"
+      },
+      "expected_error": "Product quantity exceeds available stock",
+      "http_status": 400
+    },
+    {
+      "scenario": "Invalid Payment Method",
+      "request": {
+        "productId": 1,
+        "quantity": 5,
+        "customerName": "John Doe",
+        "customerEmail": "john.doe@example.com",
+        "shippingAddress": "123 Main Street, Springfield, IL 62701",
+        "paymentMethod": "INVALID_METHOD"
+      },
+      "expected_error": "Invalid payment method",
+      "http_status": 400
+    },
+    {
+      "scenario": "Payment Service Down",
+      "request": {
+        "productId": 1,
+        "quantity": 5,
+        "customerName": "John Doe",
+        "customerEmail": "john.doe@example.com",
+        "shippingAddress": "123 Main Street, Springfield, IL 62701",
+        "paymentMethod": "CREDIT_CARD"
+      },
+      "expected_error": "Payment Service is currently unavailable",
+      "http_status": 503,
+      "note": "Circuit breaker will be OPEN"
+    },
+    {
+      "scenario": "Missing Required Field (productId)",
+      "request": {
+        "quantity": 5,
+        "customerName": "John Doe",
+        "customerEmail": "john.doe@example.com",
+        "shippingAddress": "123 Main Street, Springfield, IL 62701",
+        "paymentMethod": "CREDIT_CARD"
+      },
+      "expected_error": "productId is required",
+      "http_status": 400
+    },
+    {
+      "scenario": "Invalid Email Format",
+      "request": {
+        "productId": 1,
+        "quantity": 5,
+        "customerName": "John Doe",
+        "customerEmail": "invalid-email",
+        "shippingAddress": "123 Main Street, Springfield, IL 62701",
+        "paymentMethod": "CREDIT_CARD"
+      },
+      "expected_error": "Invalid email format",
+      "http_status": 400
+    }
+  ],
+  "postman_collection": {
+    "info": {
+      "name": "Order Service - Create Order Requests",
+      "description": "Collection of CreateOrderRequest test cases"
+    },
+    "requests": [
+      {
+        "name": "Create Order - CREDIT_CARD",
+        "method": "POST",
+        "url": "http://localhost:8080/api/orders/create",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"productId\": 1, \"quantity\": 5, \"customerName\": \"John Doe\", \"customerEmail\": \"john.doe@example.com\", \"shippingAddress\": \"123 Main Street, Springfield, IL 62701\", \"paymentMethod\": \"CREDIT_CARD\"}"
+        }
+      },
+      {
+        "name": "Create Order - UPI",
+        "method": "POST",
+        "url": "http://localhost:8080/api/orders/create",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"productId\": 3, \"quantity\": 2, \"customerName\": \"Rajesh Kumar\", \"customerEmail\": \"rajesh.kumar@example.com\", \"shippingAddress\": \"789 Market Road, Bangalore, KA 560001\", \"paymentMethod\": \"UPI\"}"
+        }
+      }
+    ]
+  }
+}
+
